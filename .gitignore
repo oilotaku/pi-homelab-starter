@@ -1,0 +1,12 @@
+# qBittorrent 執行期設定與 session 資料(含帳密/WebUI 密碼雜湊)
+qbittorrent/config/
+
+# 由 cron 腳本自動產生的靜態檔,不是原始碼
+dashboard/html/pi_status.json
+dashboard/html/devices.html
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

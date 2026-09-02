@@ -1,0 +1,39 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Taipei
+      - WEBUI_PORT=8080
+    volumes:
+      - /home/jason/docker-stack/qbittorrent/config:/config
+      - /media/jason/Mydisk:/data
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+
+  dashboard:
+    image: nginx:alpine
+    container_name: dashboard
+    restart: unless-stopped
+    volumes:
+      - /home/jason/docker-stack/dashboard/html:/usr/share/nginx/html:ro
+    ports:
+      - "8090:80"
+
+  rss-manager:
+    build:
+      context: /home/jason/docker-stack/rss-manager
+    container_name: rss-manager
+    restart: unless-stopped
+    environment:
+      - QBIT_BASE=http://qbittorrent:8080/api/v2
+      - MEDIA_ROOT=/data/05_影音
+    volumes:
+      - /media/jason/Mydisk:/data
+    ports:
+      - "5090:5090"
