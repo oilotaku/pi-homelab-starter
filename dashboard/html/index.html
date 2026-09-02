@@ -4,319 +4,91 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jason-Pi 服務導覽</title>
-<style>
-  :root {
-    color-scheme: light dark;
-    --bg: #f4f5f7;
-    --card-bg: #ffffff;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --accent: #3b82f6;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #16181d;
-      --card-bg: #21242b;
-      --text: #eef0f3;
-      --muted: #9aa1ac;
-      --border: #333844;
-      --accent: #5b9dff;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-    padding: 32px 20px 60px;
-  }
-  h1 {
-    text-align: center;
-    font-size: 1.6rem;
-    margin: 0 0 6px;
-  }
-  .subtitle {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin-bottom: 32px;
-  }
-  .group {
-    max-width: 900px;
-    margin: 0 auto 36px;
-  }
-  .group h2 {
-    font-size: 0.95rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
-    margin-bottom: 16px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 14px;
-  }
-  a.card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.12s ease, border-color 0.12s ease;
-  }
-  a.card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
-  .icon {
-    font-size: 1.6rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-  .name {
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  .desc {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .status-card {
-    max-width: 900px;
-    margin: 0 auto;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-  }
-  .status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-  }
-  .stat .label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 4px;
-  }
-  .stat .value {
-    font-size: 1.15rem;
-    font-weight: 600;
-  }
-  .stat .subvalue {
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-  .status-updated {
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-top: 14px;
-    text-align: right;
-  }
-  .rss-card {
-    max-width: 900px;
-    margin: 0 auto;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-  }
-  .rss-form {
-    display: flex;
-    gap: 10px;
-  }
-  .rss-form input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 0.95rem;
-  }
-  .rss-form button {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 0.9rem;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .rss-form button:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-  .rss-hint {
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-top: 8px;
-    line-height: 1.6;
-  }
-  .rss-result {
-    margin-top: 14px;
-    font-size: 0.85rem;
-    line-height: 1.7;
-    white-space: pre-wrap;
-  }
-  .rss-result.error { color: #ef4444; }
-  .rss-result.ok { color: var(--text); }
-</style>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <h1>Jason-Pi 服務導覽</h1>
-  <div class="subtitle" id="hostLine">連線中…</div>
+  <div class="app">
+    <nav class="sidebar">
+      <div class="brand">🖥️ Jason-Pi</div>
+      <a class="navlink active" href="index.html">🏠 首頁</a>
+      <a class="navlink" href="health.html">💚 裝置健康</a>
+      <a class="navlink" href="devices.html">📶 區網裝置</a>
+      <div class="navfoot" id="hostLine">連線中…</div>
+    </nav>
 
-  <div class="group">
-    <h2>Raspberry Pi 狀態</h2>
-    <div class="status-card">
-      <div class="status-grid" id="piStatusGrid">
-        <div class="stat"><div class="label">CPU 溫度</div><div class="value" id="stCpuTemp">-</div></div>
-        <div class="stat"><div class="label">CPU 負載</div><div class="value" id="stLoad">-</div><div class="subvalue" id="stCores"></div></div>
-        <div class="stat"><div class="label">記憶體</div><div class="value" id="stMem">-</div><div class="subvalue" id="stMemSub"></div></div>
-        <div class="stat"><div class="label">系統碟 /</div><div class="value" id="stDiskSys">-</div><div class="subvalue" id="stDiskSysSub"></div></div>
-        <div class="stat"><div class="label">媒體碟</div><div class="value" id="stDiskMedia">-</div><div class="subvalue" id="stDiskMediaSub"></div></div>
-        <div class="stat"><div class="label">開機時間</div><div class="value" id="stUptime">-</div></div>
+    <main class="main">
+      <div class="page-header">
+        <h1>Jason-Pi 服務導覽</h1>
+        <p class="subtitle">媒體伺服器與下載自動化控制台</p>
       </div>
-      <div class="status-updated" id="stUpdated"></div>
-    </div>
-  </div>
 
-  <div class="group">
-    <h2>新增追番(自動 RSS 下載)</h2>
-    <div class="rss-card">
-      <div class="rss-form">
-        <input type="text" id="rssKeyword" placeholder="輸入劇名關鍵字,例如:葬送的芙莉蓮" maxlength="60">
-        <button id="rssSubmit">建立並開始下載</button>
+      <div class="group">
+        <a class="health-strip card-surface" href="health.html" id="healthStrip">
+          <div class="hs-item">
+            <span class="hs-label">主機溫度</span>
+            <span class="hs-value" id="hsTemp">-</span>
+          </div>
+          <div class="hs-item">
+            <span class="hs-label">磁碟健康</span>
+            <span class="badge unknown" id="hsSmart">讀取中</span>
+          </div>
+          <div class="hs-item">
+            <span class="hs-label">Docker 容器</span>
+            <span class="badge unknown" id="hsDocker">讀取中</span>
+          </div>
+          <div class="hs-item">
+            <span class="hs-label">區網裝置</span>
+            <span class="hs-value" id="hsLan">-</span>
+          </div>
+          <span class="hs-more">查看詳情 →</span>
+        </a>
       </div>
-      <div class="rss-hint">送出後會自動在 DMHY 搜尋此關鍵字、建立 qBittorrent 分類與 RSS 規則(預設篩選繁體+內嵌字幕),立刻開始下載目前符合的文章,存放到媒體庫 <code>05_影音/&lt;關鍵字&gt;</code>。之後有新文章符合條件也會自動下載。</div>
-      <div class="rss-result" id="rssResult"></div>
-    </div>
+
+      <div class="group">
+        <h2>新增追番(自動 RSS 下載)</h2>
+        <div class="rss-card card-surface">
+          <div class="rss-form">
+            <input type="text" id="rssKeyword" placeholder="輸入劇名關鍵字,例如:葬送的芙莉蓮" maxlength="60">
+            <button id="rssSubmit">建立並開始下載</button>
+          </div>
+          <div class="rss-hint">送出後會自動在 DMHY 搜尋此關鍵字、建立 qBittorrent 分類與 RSS 規則(預設篩選繁體+內嵌字幕),立刻開始下載目前符合的文章,存放到媒體庫 <code>05_影音/&lt;關鍵字&gt;</code>。之後有新文章符合條件也會自動下載。</div>
+          <div class="rss-result" id="rssResult"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>媒體</h2>
+        <div class="grid">
+          <a class="card card-surface" data-port="8096" data-path="">
+            <span class="icon">🎬</span>
+            <span><span class="name">Jellyfin</span><br><span class="desc">影音串流</span></span>
+          </a>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>下載自動化</h2>
+        <div class="grid">
+          <a class="card card-surface" data-port="8080" data-path="">
+            <span class="icon">⬇️</span>
+            <span><span class="name">qBittorrent</span><br><span class="desc">BT 下載器</span></span>
+          </a>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>系統 / 網路</h2>
+        <div class="grid">
+          <a class="card card-surface" data-port="80" data-path="/admin">
+            <span class="icon">🛡️</span>
+            <span><span class="name">Pi-hole</span><br><span class="desc">DNS / 廣告過濾</span></span>
+          </a>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <div class="group">
-    <h2>媒體</h2>
-    <div class="grid">
-      <a class="card" data-port="8096" data-path="">
-        <span class="icon">🎬</span>
-        <span><span class="name">Jellyfin</span><br><span class="desc">影音串流</span></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="group">
-    <h2>下載自動化</h2>
-    <div class="grid">
-      <a class="card" data-port="8080" data-path="">
-        <span class="icon">⬇️</span>
-        <span><span class="name">qBittorrent</span><br><span class="desc">BT 下載器</span></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="group">
-    <h2>系統 / 網路</h2>
-    <div class="grid">
-      <a class="card" data-port="80" data-path="/admin">
-        <span class="icon">🛡️</span>
-        <span><span class="name">Pi-hole</span><br><span class="desc">DNS / 廣告過濾</span></span>
-      </a>
-      <a class="card" href="devices.html">
-        <span class="icon">📶</span>
-        <span><span class="name">區網裝置</span><br><span class="desc">DNS 紀錄辨識裝置(每 10 分鐘更新)</span></span>
-      </a>
-    </div>
-  </div>
-
-  <script>
-    const host = window.location.hostname || "192.168.17.148";
-    document.getElementById("hostLine").textContent = "目前連線主機：" + host;
-    document.querySelectorAll("a.card[data-port]").forEach(el => {
-      const port = el.getAttribute("data-port");
-      const path = el.getAttribute("data-path") || "";
-      el.href = "http://" + host + ":" + port + path;
-    });
-
-    async function refreshPiStatus() {
-      try {
-        const res = await fetch("pi_status.json?_=" + Date.now());
-        const d = await res.json();
-        document.getElementById("stCpuTemp").textContent = d.cpu_temp_c.toFixed(1) + " °C";
-        document.getElementById("stLoad").textContent = d.load_1.toFixed(2);
-        document.getElementById("stCores").textContent = "5/15分: " + d.load_5.toFixed(2) + " / " + d.load_15.toFixed(2) + "(" + d.cpu_cores + " 核)";
-        document.getElementById("stMem").textContent = d.mem_percent + "%";
-        document.getElementById("stMemSub").textContent = d.mem_used_gb + " / " + d.mem_total_gb + " GB";
-        document.getElementById("stDiskSys").textContent = d.disk_system_percent + "%";
-        document.getElementById("stDiskSysSub").textContent = d.disk_system_used_gb + " / " + d.disk_system_total_gb + " GB";
-        document.getElementById("stDiskMedia").textContent = d.disk_media_percent + "%";
-        document.getElementById("stDiskMediaSub").textContent = d.disk_media_used_gb + " / " + d.disk_media_total_gb + " GB";
-        document.getElementById("stUptime").textContent = d.uptime;
-        document.getElementById("stUpdated").textContent = "更新於 " + d.generated_at;
-      } catch (e) {
-        document.getElementById("stUpdated").textContent = "狀態讀取失敗";
-      }
-    }
-    refreshPiStatus();
-    setInterval(refreshPiStatus, 30000);
-
-    const rssBtn = document.getElementById("rssSubmit");
-    const rssInput = document.getElementById("rssKeyword");
-    const rssResult = document.getElementById("rssResult");
-
-    async function submitRss() {
-      const keyword = rssInput.value.trim();
-      if (!keyword) {
-        rssResult.className = "rss-result error";
-        rssResult.textContent = "請輸入劇名關鍵字";
-        return;
-      }
-      rssBtn.disabled = true;
-      rssBtn.textContent = "建立中…";
-      rssResult.className = "rss-result";
-      rssResult.textContent = "";
-      try {
-        const res = await fetch("http://" + host + ":5090/api/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ keyword }),
-        });
-        const data = await res.json();
-        if (!res.ok || data.error) {
-          rssResult.className = "rss-result error";
-          rssResult.textContent = "失敗: " + (data.error || res.status);
-        } else {
-          rssResult.className = "rss-result ok";
-          let msg = "已建立「" + data.keyword + "」的規則,存放路徑: " + data.save_path + "\n";
-          msg += "目前符合條件並開始下載: " + data.matched_count + " 篇";
-          if (data.matched_titles && data.matched_titles.length) {
-            msg += "\n" + data.matched_titles.map(t => "・" + t).join("\n");
-          }
-          rssResult.textContent = msg;
-          rssInput.value = "";
-        }
-      } catch (e) {
-        rssResult.className = "rss-result error";
-        rssResult.textContent = "連線失敗: " + e.message;
-      } finally {
-        rssBtn.disabled = false;
-        rssBtn.textContent = "建立並開始下載";
-      }
-    }
-    rssBtn.addEventListener("click", submitRss);
-    rssInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitRss(); });
-  </script>
+  <script src="index.js"></script>
 </body>
 </html>

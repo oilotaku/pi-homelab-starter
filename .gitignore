@@ -4,6 +4,8 @@ qbittorrent/config/
 # 由 cron 腳本自動產生的靜態檔,不是原始碼
 dashboard/html/pi_status.json
 dashboard/html/devices.html
+dashboard/html/devices.json
+dashboard/html/health.json
 
 # Python
 __pycache__/

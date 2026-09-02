@@ -1,0 +1,131 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+a.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+a.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+.icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ---- 首頁健康摘要條(連到 health.html) ---- */
+.health-strip {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 16px 22px;
+  text-decoration: none;
+  color: var(--text);
+  flex-wrap: wrap;
+  transition: border-color 0.12s ease;
+}
+.health-strip:hover { border-color: var(--accent); }
+.hs-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hs-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.hs-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.hs-more {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.rss-card {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 18px 20px;
+}
+.rss-form {
+  display: flex;
+  gap: 10px;
+}
+.rss-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem; /* 16px 以上,避免 iOS Safari focus 時自動放大畫面 */
+}
+.rss-form button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rss-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.rss-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.rss-result {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.rss-result.error { color: var(--fail); }
+.rss-result.ok { color: var(--text); }
+
+@media (max-width: 600px) {
+  .health-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 12px;
+  }
+  .hs-more {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .rss-form { flex-direction: column; }
+  .rss-form button { padding: 12px 18px; }
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>裝置健康儀表板</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="health.css">
+</head>
+<body>
+  <div class="app">
+    <nav class="sidebar">
+      <div class="brand">🖥️ Jason-Pi</div>
+      <a class="navlink" href="index.html">🏠 首頁</a>
+      <a class="navlink active" href="health.html">💚 裝置健康</a>
+      <a class="navlink" href="devices.html">📶 區網裝置</a>
+      <div class="navfoot" id="hostLine">連線中…</div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>裝置健康儀表板</h1>
+        <p class="subtitle">主機資源、磁碟 SMART 健康、Docker 容器、區網裝置線上狀態一覽</p>
+      </div>
+
+      <div class="group">
+        <h2>主機資源</h2>
+        <div class="stat-grid card-surface" id="hostGrid">
+          <div class="stat"><div class="label">CPU 溫度</div><div class="value" id="stCpuTemp">-</div></div>
+          <div class="stat"><div class="label">CPU 負載</div><div class="value" id="stLoad">-</div><div class="subvalue" id="stCores"></div></div>
+          <div class="stat"><div class="label">記憶體</div><div class="value" id="stMem">-</div><div class="subvalue" id="stMemSub"></div></div>
+          <div class="stat"><div class="label">系統碟 /</div><div class="value" id="stDiskSys">-</div><div class="subvalue" id="stDiskSysSub"></div></div>
+          <div class="stat"><div class="label">媒體碟</div><div class="value" id="stDiskMedia">-</div><div class="subvalue" id="stDiskMediaSub"></div></div>
+          <div class="stat"><div class="label">開機時間</div><div class="value" id="stUptime">-</div></div>
+        </div>
+        <div class="section-updated" id="hostUpdated"></div>
+      </div>
+
+      <div class="group">
+        <h2>磁碟健康(SMART)</h2>
+        <div class="smart-grid" id="smartGrid">
+          <div class="card-surface smart-card">讀取中…</div>
+        </div>
+        <div class="section-updated" id="smartUpdated"></div>
+      </div>
+
+      <div class="group">
+        <h2>Docker 容器</h2>
+        <div class="docker-list card-surface" id="dockerList">讀取中…</div>
+      </div>
+
+      <div class="group">
+        <h2>區網裝置</h2>
+        <div class="lan-card card-surface">
+          <div class="lan-summary" id="lanSummary">讀取中…</div>
+          <div class="lan-online-list" id="lanOnlineList"></div>
+          <a class="lan-link" href="devices.html">查看完整清單 →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="health.js"></script>
+</body>
+</html>
