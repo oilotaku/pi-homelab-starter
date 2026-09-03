@@ -56,20 +56,14 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 
 ### 設定
 
-機器相關的東西都集中在 `dashboard/html/config.js` 一個檔案裡,換一台機器用只要改這裡,不用動 `index.html`/`index.js`:
+機器相關的東西都集中在 `dashboard/html/config.js` 一個檔案裡,換一台機器用只要改這裡,不用動 `index.html`/`index.js`。跟 `.env` 同樣的模式:
 
-```js
-window.DASHBOARD_CONFIG = {
-  fallbackHost: "192.168.17.148",  // 抓不到 window.location.hostname 時的備援位址
-  rssApiPort: 5090,                // RSS 自動下載後端的 port,設 null 會自動隱藏「新增追番」表單
-  serviceGroups: [                 // 首頁的服務連結卡片,依分組顯示
-    { title: "媒體", services: [{ icon: "🎬", name: "Jellyfin", desc: "影音串流", port: 8096, path: "" }] },
-    // ...換成你自己的服務清單
-  ],
-};
+```bash
+cp dashboard/html/config.example.js dashboard/html/config.js
+$EDITOR dashboard/html/config.js
 ```
 
-`rssApiPort` 對應的 RSS 自動下載後端(rss-manager)是另一支自架服務,不在這個 repo 裡——沒有這支後端就設成 `null`,首頁會自動隱藏那個表單,不影響其他頁面。
+`config.js` 已被 `.gitignore` 排除,不會進版控;`config.example.js` 只示範這個 repo 實際會幫你裝的 Pi-hole 一張卡片,其餘(服務連結清單、有沒有自架 RSS 自動下載後端)都是這個 repo 以外的東西,不在範本裡預設,依你自己機器的實際情況加。
 
 ### 頁面
 

@@ -52,7 +52,7 @@
             <input type="text" id="rssKeyword" placeholder="輸入劇名關鍵字,例如:葬送的芙莉蓮" maxlength="60">
             <button id="rssSubmit">建立並開始下載</button>
           </div>
-          <div class="rss-hint">送出後會自動在 DMHY 搜尋此關鍵字、建立 qBittorrent 分類與 RSS 規則(預設篩選繁體+內嵌字幕),立刻開始下載目前符合的文章,存放到媒體庫 <code>05_影音/&lt;關鍵字&gt;</code>。之後有新文章符合條件也會自動下載。</div>
+          <div class="rss-hint">送出後會呼叫 <code>config.js</code> 設定的 RSS 自動下載後端(<code>POST /api/create</code>,body 為 <code>{"keyword"}</code>),實際搜尋/下載規則由那支後端決定——這個表單本身不含任何下載邏輯。</div>
           <div class="rss-result" id="rssResult"></div>
         </div>
       </div>

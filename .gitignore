@@ -1,6 +1,10 @@
 # 使用者自己的設定值,含密碼/authkey,絕對不要進版控
 .env
 
+# dashboard 機器相關設定(連線位址、服務清單、RSS 後端 port),
+# 只留 config.example.js 這個通用範本進版控
+dashboard/html/config.js
+
 # Pi-hole Docker 執行期資料
 pihole/etc-pihole/
 pihole/etc-dnsmasq.d/
