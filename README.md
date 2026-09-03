@@ -16,7 +16,7 @@ Jellyfin(影音串流)是另一組獨立的 compose,**不在這個 repo 裡**(�
 
 ### dashboard(`dashboard/html/`)
 
-純靜態檔案,由 nginx:alpine 唯讀掛載,沒有後端。三個頁面 + 排程腳本產生的 JSON/HTML 共用一套 design tokens(`common.css`),支援亮/暗色主題,側邊導覽在窄螢幕自動收成頂部列。
+這台機器的**整合管理頁面**(port 8090)——服務入口、下載自動化操作、主機與裝置健康狀態,一站集中在這裡,不用個別登入 Jellyfin/qBittorrent/Pi-hole 才能看狀態。純靜態檔案,由 nginx:alpine 唯讀掛載,沒有後端。三個頁面 + 排程腳本產生的 JSON/HTML 共用一套 design tokens(`common.css`),支援亮/暗色主題,側邊導覽在窄螢幕自動收成頂部列。
 
 - **首頁**(`index.html`):服務連結卡片(Jellyfin/qBittorrent/Pi-hole)、新增追番的 RSS 表單、健康摘要條
 - **裝置健康**(`health.html`):主機資源(CPU/記憶體/磁碟)、磁碟 SMART 健康(sda/sdb)、Docker 容器狀態、區網裝置在線摘要
