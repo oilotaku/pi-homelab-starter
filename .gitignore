@@ -15,7 +15,7 @@ samba/*.bak
 # 這台機器實際在跑的下載自動化服務,repo 只公開 dashboard,兩者不進版控
 qbittorrent/
 rss-manager/
-docker-compose.yml
+/docker-compose.yml
 
 # 由 cron 腳本自動產生的靜態檔,不是原始碼
 dashboard/html/pi_status.json
