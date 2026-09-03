@@ -54,7 +54,22 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 
 `dashboard/` 是另一台實際在跑的 Raspberry Pi 5 家用伺服器上的**監控管理頁面**——服務入口、下載自動化操作、主機與裝置健康狀態,一站集中在這裡,不用個別登入各服務才能看狀態。純靜態檔案,由 `nginx:alpine` 唯讀掛載,沒有後端。
 
-跟上面的安裝腳本不同,這部分**不是可攜式範本**——部分內容(RSS 表單呼叫的 API 位址、健康資料的來源)對應那台機器的環境,主要當作「怎麼做一個家用伺服器監控頁面」的參考,不是拿來直接跑的工具。
+### 設定
+
+機器相關的東西都集中在 `dashboard/html/config.js` 一個檔案裡,換一台機器用只要改這裡,不用動 `index.html`/`index.js`:
+
+```js
+window.DASHBOARD_CONFIG = {
+  fallbackHost: "192.168.17.148",  // 抓不到 window.location.hostname 時的備援位址
+  rssApiPort: 5090,                // RSS 自動下載後端的 port,設 null 會自動隱藏「新增追番」表單
+  serviceGroups: [                 // 首頁的服務連結卡片,依分組顯示
+    { title: "媒體", services: [{ icon: "🎬", name: "Jellyfin", desc: "影音串流", port: 8096, path: "" }] },
+    // ...換成你自己的服務清單
+  ],
+};
+```
+
+`rssApiPort` 對應的 RSS 自動下載後端(rss-manager)是另一支自架服務,不在這個 repo 裡——沒有這支後端就設成 `null`,首頁會自動隱藏那個表單,不影響其他頁面。
 
 ### 頁面
 
@@ -78,6 +93,4 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 
 ### 限制
 
-- 首頁「新增追番」表單背後打的 RSS 自動下載 API(`:5090`)是另一支自架服務,不在這個 repo 裡,拿掉這段或換成自己的後端才能用
-- 服務連結卡片(Jellyfin/qBittorrent/Pi-hole)的連結是照那台機器實際跑的服務兜出來的,要換成自己的服務清單
 - 沒有任何身分驗證——整個設計假設只有信任的家用網路(LAN + VPN)能連到這個頁面,不要對外公網開放

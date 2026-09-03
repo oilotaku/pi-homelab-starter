@@ -45,7 +45,7 @@
         </a>
       </div>
 
-      <div class="group">
+      <div class="group" id="rssGroup" hidden>
         <h2>新增追番(自動 RSS 下載)</h2>
         <div class="rss-card card-surface">
           <div class="rss-form">
@@ -57,38 +57,11 @@
         </div>
       </div>
 
-      <div class="group">
-        <h2>媒體</h2>
-        <div class="grid">
-          <a class="card card-surface" data-port="8096" data-path="">
-            <span class="icon">🎬</span>
-            <span><span class="name">Jellyfin</span><br><span class="desc">影音串流</span></span>
-          </a>
-        </div>
-      </div>
-
-      <div class="group">
-        <h2>下載自動化</h2>
-        <div class="grid">
-          <a class="card card-surface" data-port="8080" data-path="">
-            <span class="icon">⬇️</span>
-            <span><span class="name">qBittorrent</span><br><span class="desc">BT 下載器</span></span>
-          </a>
-        </div>
-      </div>
-
-      <div class="group">
-        <h2>系統 / 網路</h2>
-        <div class="grid">
-          <a class="card card-surface" data-port="80" data-path="/admin">
-            <span class="icon">🛡️</span>
-            <span><span class="name">Pi-hole</span><br><span class="desc">DNS / 廣告過濾</span></span>
-          </a>
-        </div>
-      </div>
+      <div id="serviceGroups"></div>
     </main>
   </div>
 
+  <script src="config.js"></script>
   <script src="index.js"></script>
 </body>
 </html>

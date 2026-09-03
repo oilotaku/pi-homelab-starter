@@ -1,10 +1,49 @@
-const host = window.location.hostname || "192.168.17.148";
+const CONFIG = window.DASHBOARD_CONFIG || { serviceGroups: [], rssApiPort: null };
+const host = window.location.hostname || CONFIG.fallbackHost || "localhost";
 document.getElementById("hostLine").textContent = "連線主機：" + host;
-document.querySelectorAll("a.card[data-port]").forEach(el => {
-  const port = el.getAttribute("data-port");
-  const path = el.getAttribute("data-path") || "";
-  el.href = "http://" + host + ":" + port + path;
-});
+
+function renderServiceGroups() {
+  const container = document.getElementById("serviceGroups");
+  container.replaceChildren();
+  for (const group of CONFIG.serviceGroups || []) {
+    const groupEl = document.createElement("div");
+    groupEl.className = "group";
+
+    const h2 = document.createElement("h2");
+    h2.textContent = group.title;
+    groupEl.appendChild(h2);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    for (const svc of group.services || []) {
+      const a = document.createElement("a");
+      a.className = "card card-surface";
+      a.href = "http://" + host + ":" + svc.port + (svc.path || "");
+
+      const icon = document.createElement("span");
+      icon.className = "icon";
+      icon.textContent = svc.icon;
+
+      const label = document.createElement("span");
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = svc.name;
+      const desc = document.createElement("span");
+      desc.className = "desc";
+      desc.textContent = svc.desc;
+      label.appendChild(name);
+      label.appendChild(document.createElement("br"));
+      label.appendChild(desc);
+
+      a.appendChild(icon);
+      a.appendChild(label);
+      grid.appendChild(a);
+    }
+    groupEl.appendChild(grid);
+    container.appendChild(groupEl);
+  }
+}
+renderServiceGroups();
 
 function setBadge(el, status, text) {
   el.className = "badge " + status;
@@ -50,48 +89,52 @@ async function refreshHealthStrip() {
 refreshHealthStrip();
 setInterval(refreshHealthStrip, 30000);
 
-const rssBtn = document.getElementById("rssSubmit");
-const rssInput = document.getElementById("rssKeyword");
-const rssResult = document.getElementById("rssResult");
+if (CONFIG.rssApiPort) {
+  document.getElementById("rssGroup").hidden = false;
 
-async function submitRss() {
-  const keyword = rssInput.value.trim();
-  if (!keyword) {
-    rssResult.className = "rss-result error";
-    rssResult.textContent = "請輸入劇名關鍵字";
-    return;
-  }
-  rssBtn.disabled = true;
-  rssBtn.textContent = "建立中…";
-  rssResult.className = "rss-result";
-  rssResult.textContent = "";
-  try {
-    const res = await fetch("http://" + host + ":5090/api/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ keyword }),
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
+  const rssBtn = document.getElementById("rssSubmit");
+  const rssInput = document.getElementById("rssKeyword");
+  const rssResult = document.getElementById("rssResult");
+
+  async function submitRss() {
+    const keyword = rssInput.value.trim();
+    if (!keyword) {
       rssResult.className = "rss-result error";
-      rssResult.textContent = "失敗: " + (data.error || res.status);
-    } else {
-      rssResult.className = "rss-result ok";
-      let msg = "已建立「" + data.keyword + "」的規則,存放路徑: " + data.save_path + "\n";
-      msg += "目前符合條件並開始下載: " + data.matched_count + " 篇";
-      if (data.matched_titles && data.matched_titles.length) {
-        msg += "\n" + data.matched_titles.map(t => "・" + t).join("\n");
-      }
-      rssResult.textContent = msg;
-      rssInput.value = "";
+      rssResult.textContent = "請輸入劇名關鍵字";
+      return;
     }
-  } catch (e) {
-    rssResult.className = "rss-result error";
-    rssResult.textContent = "連線失敗: " + e.message;
-  } finally {
-    rssBtn.disabled = false;
-    rssBtn.textContent = "建立並開始下載";
+    rssBtn.disabled = true;
+    rssBtn.textContent = "建立中…";
+    rssResult.className = "rss-result";
+    rssResult.textContent = "";
+    try {
+      const res = await fetch("http://" + host + ":" + CONFIG.rssApiPort + "/api/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        rssResult.className = "rss-result error";
+        rssResult.textContent = "失敗: " + (data.error || res.status);
+      } else {
+        rssResult.className = "rss-result ok";
+        let msg = "已建立「" + data.keyword + "」的規則,存放路徑: " + data.save_path + "\n";
+        msg += "目前符合條件並開始下載: " + data.matched_count + " 篇";
+        if (data.matched_titles && data.matched_titles.length) {
+          msg += "\n" + data.matched_titles.map(t => "・" + t).join("\n");
+        }
+        rssResult.textContent = msg;
+        rssInput.value = "";
+      }
+    } catch (e) {
+      rssResult.className = "rss-result error";
+      rssResult.textContent = "連線失敗: " + e.message;
+    } finally {
+      rssBtn.disabled = false;
+      rssBtn.textContent = "建立並開始下載";
+    }
   }
+  rssBtn.addEventListener("click", submitRss);
+  rssInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitRss(); });
 }
-rssBtn.addEventListener("click", submitRss);
-rssInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitRss(); });
