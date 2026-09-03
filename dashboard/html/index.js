@@ -1,4 +1,4 @@
-const CONFIG = window.DASHBOARD_CONFIG || { serviceGroups: [], rssApiPort: null };
+const CONFIG = window.DASHBOARD_CONFIG || { serviceGroups: [] };
 const host = window.location.hostname || CONFIG.fallbackHost || "localhost";
 document.getElementById("hostLine").textContent = "連線主機：" + host;
 
@@ -88,53 +88,3 @@ async function refreshHealthStrip() {
 }
 refreshHealthStrip();
 setInterval(refreshHealthStrip, 30000);
-
-if (CONFIG.rssApiPort) {
-  document.getElementById("rssGroup").hidden = false;
-
-  const rssBtn = document.getElementById("rssSubmit");
-  const rssInput = document.getElementById("rssKeyword");
-  const rssResult = document.getElementById("rssResult");
-
-  async function submitRss() {
-    const keyword = rssInput.value.trim();
-    if (!keyword) {
-      rssResult.className = "rss-result error";
-      rssResult.textContent = "請輸入劇名關鍵字";
-      return;
-    }
-    rssBtn.disabled = true;
-    rssBtn.textContent = "建立中…";
-    rssResult.className = "rss-result";
-    rssResult.textContent = "";
-    try {
-      const res = await fetch("http://" + host + ":" + CONFIG.rssApiPort + "/api/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        rssResult.className = "rss-result error";
-        rssResult.textContent = "失敗: " + (data.error || res.status);
-      } else {
-        rssResult.className = "rss-result ok";
-        let msg = "已建立「" + data.keyword + "」的規則,存放路徑: " + data.save_path + "\n";
-        msg += "目前符合條件並開始下載: " + data.matched_count + " 篇";
-        if (data.matched_titles && data.matched_titles.length) {
-          msg += "\n" + data.matched_titles.map(t => "・" + t).join("\n");
-        }
-        rssResult.textContent = msg;
-        rssInput.value = "";
-      }
-    } catch (e) {
-      rssResult.className = "rss-result error";
-      rssResult.textContent = "連線失敗: " + e.message;
-    } finally {
-      rssBtn.disabled = false;
-      rssBtn.textContent = "建立並開始下載";
-    }
-  }
-  rssBtn.addEventListener("click", submitRss);
-  rssInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitRss(); });
-}
