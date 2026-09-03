@@ -50,7 +50,7 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 - [Samba](https://www.samba.org/)
 - [Tailscale](https://tailscale.com/)
 
-## dashboard(監控管理頁面)
+## dashboard (監控管理頁面)
 
 `dashboard/` 是另一台實際在跑的 Raspberry Pi 5 家用伺服器上的**監控管理頁面**——服務入口、下載自動化操作、主機與裝置健康狀態,一站集中在這裡,不用個別登入各服務才能看狀態。純靜態檔案,由 `nginx:alpine` 唯讀掛載,沒有後端。
 
@@ -77,7 +77,7 @@ window.DASHBOARD_CONFIG = {
 
 - **首頁**(`index.html`):服務連結卡片、新增追番的 RSS 表單、健康摘要條(點進去看裝置健康頁)
 - **裝置健康**(`health.html`):主機資源(CPU/記憶體/磁碟)、磁碟 SMART 健康、Docker 容器狀態、區網裝置在線摘要
-- **區網裝置**(`devices.html`):DNS 查詢紀錄被動辨識出的區網裝置清單
+- **區網裝置**(`devices.html`,樣式在 `devices.css`):DNS 查詢紀錄被動辨識出的區網裝置清單——這頁跟下面提到的三個 JSON 一樣是排程腳本產生的,`devices.html` 本身**不在這個 repo 裡**,只有它引用的 `devices.css` 有進版控
 
 ### 資料從哪來
 
