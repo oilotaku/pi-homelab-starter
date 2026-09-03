@@ -1,0 +1,11 @@
+
+[__SMB_SHARE_NAME__]
+   comment = Shared via pi-homelab-starter
+   path = __SMB_SHARE_PATH__
+   browseable = yes
+   read only = no
+   guest ok = no
+   valid users = __SMB_USER__
+   force user = __SMB_USER__
+   create mask = 0644
+   directory mask = 0755

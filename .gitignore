@@ -1,3 +1,17 @@
+# 使用者自己的設定值,含密碼/authkey,絕對不要進版控
+.env
+
+# Pi-hole Docker 執行期資料
+pihole/etc-pihole/
+pihole/etc-dnsmasq.d/
+
+# Samba 設定備份(腳本執行時自動產生)
+samba/*.bak
+
+# 編輯器/系統雜項
+*.swp
+.DS_Store
+
 # 這台機器實際在跑的下載自動化服務,repo 只公開 dashboard,兩者不進版控
 qbittorrent/
 rss-manager/
