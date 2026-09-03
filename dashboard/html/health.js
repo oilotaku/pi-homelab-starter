@@ -1,4 +1,5 @@
-const host = window.location.hostname || "192.168.17.148";
+const CONFIG = window.DASHBOARD_CONFIG || {};
+const host = window.location.hostname || CONFIG.fallbackHost || "localhost";
 document.getElementById("hostLine").textContent = "連線主機：" + host;
 
 async function refreshHost() {
@@ -12,8 +13,11 @@ async function refreshHost() {
     document.getElementById("stMemSub").textContent = d.mem_used_gb + " / " + d.mem_total_gb + " GB";
     document.getElementById("stDiskSys").textContent = d.disk_system_percent + "%";
     document.getElementById("stDiskSysSub").textContent = d.disk_system_used_gb + " / " + d.disk_system_total_gb + " GB";
-    document.getElementById("stDiskMedia").textContent = d.disk_media_percent + "%";
-    document.getElementById("stDiskMediaSub").textContent = d.disk_media_used_gb + " / " + d.disk_media_total_gb + " GB";
+    if (d.disk_media_percent != null) {
+      document.getElementById("stMediaStat").hidden = false;
+      document.getElementById("stDiskMedia").textContent = d.disk_media_percent + "%";
+      document.getElementById("stDiskMediaSub").textContent = d.disk_media_used_gb + " / " + d.disk_media_total_gb + " GB";
+    }
     document.getElementById("stUptime").textContent = d.uptime;
     document.getElementById("hostUpdated").textContent = "更新於 " + d.generated_at;
   } catch (e) {
@@ -40,7 +44,9 @@ async function refreshSmart() {
     const res = await fetch("health.json?_=" + Date.now());
     const d = await res.json();
 
-    grid.innerHTML = d.smart.map(s => {
+    grid.innerHTML = !d.smart.length
+      ? '<div class="card-surface smart-card">未設定 SMART_DISKS,略過磁碟健康檢查(見 scripts/generate_health.py 說明)</div>'
+      : d.smart.map(s => {
       const notes = (s.notes && s.notes.length)
         ? `<div class="smart-notes">${s.notes.map(n => "⚠ " + esc(n)).join("<br>")}</div>`
         : "";

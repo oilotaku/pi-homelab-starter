@@ -30,7 +30,7 @@
           <div class="stat"><div class="label">CPU 負載</div><div class="value" id="stLoad">-</div><div class="subvalue" id="stCores"></div></div>
           <div class="stat"><div class="label">記憶體</div><div class="value" id="stMem">-</div><div class="subvalue" id="stMemSub"></div></div>
           <div class="stat"><div class="label">系統碟 /</div><div class="value" id="stDiskSys">-</div><div class="subvalue" id="stDiskSysSub"></div></div>
-          <div class="stat"><div class="label">媒體碟</div><div class="value" id="stDiskMedia">-</div><div class="subvalue" id="stDiskMediaSub"></div></div>
+          <div class="stat" id="stMediaStat" hidden><div class="label">媒體碟</div><div class="value" id="stDiskMedia">-</div><div class="subvalue" id="stDiskMediaSub"></div></div>
           <div class="stat"><div class="label">開機時間</div><div class="value" id="stUptime">-</div></div>
         </div>
         <div class="section-updated" id="hostUpdated"></div>
@@ -60,6 +60,7 @@
     </main>
   </div>
 
+  <script src="config.js"></script>
   <script src="health.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 兩個各自獨立的部分,合放在同一個 repo:
 
 - **[一鍵安裝腳本](#一鍵安裝-pi-holesambatailscale)**:在任何 Raspberry Pi / Debian 系 Linux 上快速配置 Pi-hole、Samba、Tailscale 三個最常見的家用伺服器服務,可攜式、透過 `.env` 參數化,不綁特定機器
-- **[dashboard](#dashboard-監控管理頁面)**:一台實際 Raspberry Pi 5 家用伺服器在跑的整合監控管理頁面(服務入口、主機資源、磁碟健康、Docker 容器、區網裝置狀態),綁定那台機器的實際環境,主要當作參考範本
+- **[dashboard](#dashboard-監控管理頁面)**:整合監控管理頁面(服務入口、主機資源、磁碟健康、Docker 容器、區網裝置狀態),源自一台實際在跑的 Raspberry Pi 5,機器相關設定都抽成 `config.js` 與環境變數,換一台機器用不用重寫程式
 
 兩者可以獨立使用,不必一起裝。
 
@@ -52,7 +52,7 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 
 ## dashboard (監控管理頁面)
 
-`dashboard/` 是另一台實際在跑的 Raspberry Pi 5 家用伺服器上的**監控管理頁面**——服務入口、主機與裝置健康狀態,一站集中在這裡,不用個別登入各服務才能看狀態。純靜態檔案,由 `nginx:alpine` 唯讀掛載,沒有後端。
+`dashboard/` 是家用伺服器的**監控管理頁面**——服務入口、主機與裝置健康狀態,一站集中在這裡,不用個別登入各服務才能看狀態。純靜態檔案,由 `nginx:alpine` 唯讀掛載,沒有後端,源自一台實際在跑的 Raspberry Pi 5。
 
 ### 設定
 
@@ -81,15 +81,24 @@ window.DASHBOARD_CONFIG = {
 
 ### 資料從哪來
 
-頁面本身是純靜態檔,所有數值都是前端 JS 對同目錄下幾個 JSON 檔案 `fetch()` 輪詢:
+頁面本身是純靜態檔,所有數值都是前端 JS 對同目錄下幾個 JSON 檔案 `fetch()` 輪詢,由 `scripts/` 底下的 Python 腳本定期產生——這些腳本**在這個 repo 裡**,換一台機器用不用重寫,設幾個環境變數就好:
 
-| 檔案 | 內容 | 產生方式 |
-|---|---|---|
-| `pi_status.json` | CPU 溫度/負載、記憶體、磁碟、開機時間 | 排程腳本每分鐘寫入 |
-| `health.json` | 磁碟 SMART 健康、Docker 容器狀態 | 排程腳本每 5 分鐘寫入(需要能讀 SMART 與 `docker ps`) |
-| `devices.json` / `devices.html` | 區網裝置清單與在線狀態 | 排程腳本每 10 分鐘寫入(需要能讀 Pi-hole FTL 資料庫) |
+| 檔案 | 內容 | 產生腳本 | 建議排程 |
+|---|---|---|---|
+| `pi_status.json` | CPU 溫度/負載、記憶體、磁碟、開機時間 | `scripts/generate_pi_status.py`(不需 sudo) | 每分鐘 |
+| `health.json` | 磁碟 SMART 健康、Docker 容器狀態 | `scripts/generate_health.py`(SMART 讀取需要 sudo) | 每 5 分鐘 |
+| `devices.json` / `devices.html` | 區網裝置清單與在線狀態 | `scripts/generate_devices_page.py`(讀 Pi-hole DB 需要 sudo) | 每 10 分鐘 |
 
-這些產生用的腳本是機器本機的 cron job,**不在這個 repo 裡**——它們對應特定的硬體/服務(smartctl 讀哪顆碟、Pi-hole DB 路徑),搬到別的機器要自己重寫。這個 repo 只放前端會讀取、渲染這些 JSON 的部分。
+每支腳本開頭的 docstring 都寫了完整的環境變數清單與 crontab 範例。三支預設都不需要設定就能跑(`DASHBOARD_HTML_DIR` 預設抓 repo 裡的 `dashboard/html`,`PIHOLE_DB` 預設官方安裝路徑,`THIS_HOST_IP` 找不到會自動偵測),需要調整的通常只有:
+
+```bash
+# crontab -e,依實際情況調整路徑跟環境變數
+*/1  * * * * MEDIA_DISK_PATH=/mnt/mydata /usr/bin/python3 /path/to/scripts/generate_pi_status.py >> /path/to/scripts/generate_pi_status.log 2>&1
+*/5  * * * * /usr/bin/sudo SMART_DISKS=/dev/sda,/dev/sdb /usr/bin/python3 /path/to/scripts/generate_health.py >> /path/to/scripts/generate_health.log 2>&1
+*/10 * * * * /usr/bin/sudo /usr/bin/python3 /path/to/scripts/generate_devices_page.py >> /path/to/scripts/generate_devices_page.log 2>&1
+```
+
+沒有媒體碟就不用設 `MEDIA_DISK_PATH`(健康頁面會自動隱藏那個區塊);沒有實體磁碟可檢查 SMART(例如 VM)就不用設 `SMART_DISKS`(健康頁面會顯示略過的提示,不影響 Docker 容器狀態那塊)。
 
 ### 限制
 
