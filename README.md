@@ -59,6 +59,23 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 - **`dashboard/frontend/`**:Vue 3 + Vite 寫的 SPA(hash 路由,三個頁面),`npm run build` 產出純靜態檔,由 `nginx:alpine` serve,唯讀資訊(服務入口、健康狀態、裝置清單)不需要後端也能動。
 - **`backend/`**:選用的小型 Node.js 後端,提供即時 CPU/RAM、Docker 容器啟停/重啟、系統音量控制這幾個「需要在 host 上實際執行指令」的功能。刻意做成**原生 systemd service**,不是 Docker 容器——容器管理要碰 host 的 Docker socket、音量控制要碰桌面 session 的 PipeWire,兩者放進容器裡都不乾淨,直接跑在 host 上最簡單。沒有部署這個後端也完全沒問題,前端會自動隱藏相關區塊,退回純唯讀模式。
 
+`docker-compose.yml`(不在這個 repo 裡,機器自己的,參考下面範例)要把 `dashboard/nginx.conf` 也掛進容器,不能只掛 `dashboard/html`:
+
+```yaml
+services:
+  dashboard:
+    image: nginx:alpine
+    container_name: dashboard
+    restart: unless-stopped
+    volumes:
+      - /path/to/dashboard/html:/usr/share/nginx/html:ro
+      - /path/to/dashboard/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8090:80"
+```
+
+這個自訂設定明確送出 `Cache-Control`(`index.html`/`config.js`/`*.json` 都要求每次重新驗證,`assets/` 底下 Vite 帶 hash 的檔名才放心長期快取)——**必要**,不是可省略的最佳化。踩過的坑:nginx 預設完全不送 `Cache-Control` 時,實測 iOS Safari 會用啟發式快取長時間完全不打伺服器就吃舊頁面,連手動關閉分頁重開都繞不過(根本沒發出網路請求,不是單純的瀏覽器快取/bfcache 問題,access log 上完全看不到那個裝置的紀錄)。
+
 ### 設定:前端
 
 機器相關的東西都集中在 `dashboard/config.example.js` 一個檔案裡,換一台機器用只要改這裡,不用動 Vue 原始碼。跟 `.env` 同樣的模式:
