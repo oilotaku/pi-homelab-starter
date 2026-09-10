@@ -101,10 +101,12 @@ Build 並部署到 `dashboard/html/`(給 nginx serve):
 cd backend
 npm install
 cp .env.example .env
-# 產生一個 token,填進 .env 的 AUTH_TOKEN(容器啟停/重啟、音量調整都要驗證這個)
-openssl rand -hex 24
+# 產生一個 6 位數 PIN,填進 .env 的 AUTH_PIN(容器啟停/重啟、音量調整都要驗證這個)
+python3 -c "import random; print(f'{random.randint(0,999999):06d}')"
 $EDITOR .env
 ```
+
+刻意用短 PIN 而不是長 token——手機數字鍵盤輸入方便很多。PIN 的 keyspace 比長 token 小很多,所以伺服器端加了失敗鎖定:連續錯 5 次會鎖定 5 分鐘(`server.js` 的 `MAX_ATTEMPTS`/`LOCKOUT_MS`),擋暴力猜測。
 
 用 systemd **user service** 常駐(參考 `pi-dashboard-backend.service.example`,做法跟這台機器上其他常駐的桌面相關服務一致):
 
@@ -116,7 +118,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now pi-dashboard-backend.service
 ```
 
-再把 `dashboard/html/config.js` 的 `backendPort` 設成 `.env` 裡的 `PORT`(預設 `8091`),前端就會自動顯示即時資源、容器控制、音量控制區塊。**容器啟停/重啟、音量調整這幾個 mutating 動作都需要 token**(唯讀的即時數據、容器列表不用);網頁上點側邊欄「解鎖容器/音量控制」輸入一次 token,存在瀏覽器 localStorage。
+再把 `dashboard/html/config.js` 的 `backendPort` 設成 `.env` 裡的 `PORT`(預設 `8091`),前端就會自動顯示即時資源、容器控制、音量控制區塊。**容器啟停/重啟、音量調整這幾個 mutating 動作都需要 PIN**(唯讀的即時數據、容器列表不用);首頁跟裝置健康頁都有一張「解鎖」卡片,輸入一次 PIN,存在瀏覽器 localStorage,兩頁共用同一份狀態。
 
 ### 頁面
 
@@ -152,4 +154,5 @@ systemctl --user enable --now pi-dashboard-backend.service
 ### 限制
 
 - 前端唯讀部分沒有任何身分驗證——整個設計假設只有信任的家用網路(LAN + VPN)能連到這個頁面,不要對外公網開放
-- 後端的 mutating API(容器啟停/重啟、音量調整)用固定 token 驗證,**沒有帳號區分、沒有操作紀錄**,同一個 token 對所有能連到這個 port 的人都是同一組權限——一樣只適合信任的家用網路,不要對外公網開放。這個後端能碰 Docker socket(等同 host root 權限),`.env` 裡的 `AUTH_TOKEN` 外洩風險遠高於單純的網頁密碼,務必留在 `.gitignore` 範圍內,不要手動加進版控
+- 後端的 mutating API(容器啟停/重啟、音量調整)用固定 PIN 驗證,**沒有帳號區分、沒有操作紀錄**,同一個 PIN 對所有能連到這個 port 的人都是同一組權限——一樣只適合信任的家用網路,不要對外公網開放。這個後端能碰 Docker socket(等同 host root 權限),`.env` 裡的 `AUTH_PIN` 外洩風險遠高於單純的網頁密碼,務必留在 `.gitignore` 範圍內,不要手動加進版控
+- PIN 只有 6 位數字,keyspace 遠小於原本考慮過的長 token,單純靠長度不夠安全,所以伺服器端加了失敗鎖定(連續錯 5 次鎖 5 分鐘)。這個鎖定是全域的(不分來源 IP),代表惡意連續嘗試也會連帶把正常使用者鎖在外面——對單人家用工具是可接受的取捨,但要知道這個限制

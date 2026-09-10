@@ -15,17 +15,27 @@ const { execFile } = require("child_process");
 const Docker = require("dockerode");
 
 const PORT = Number(process.env.PORT) || 8091;
-const AUTH_TOKEN = process.env.AUTH_TOKEN || "";
+// AUTH_PIN 取代舊的 AUTH_TOKEN——手機輸入一長串 hex token 太痛苦,改成短 PIN
+// (建議 6 位數字)方便用手機數字鍵盤輸入。因為 PIN 的 keyspace 遠小於原本的
+// 24-byte hex token,下面额外加了失敗鎖定機制擋暴力破解,不能只靠 PIN 本身長度。
+const AUTH_PIN = process.env.AUTH_PIN || process.env.AUTH_TOKEN || "";
 const ALLOWED_CONTAINERS = (process.env.ALLOWED_CONTAINERS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
-if (!AUTH_TOKEN) {
-  console.error("[FATAL] AUTH_TOKEN 未設定(見 .env.example),拒絕啟動 —— 這個服務有容器控制與系統音量控制權限,不能沒有驗證就上線。");
+if (!AUTH_PIN) {
+  console.error("[FATAL] AUTH_PIN 未設定(見 .env.example),拒絕啟動 —— 這個服務有容器控制與系統音量控制權限,不能沒有驗證就上線。");
   process.exit(1);
 }
+
+// ---- 失敗鎖定:PIN 只有幾位數字,keyspace 小,一定要擋暴力猜測 ----
+// 單一 process 記憶體狀態即可(這是單人家用工具,不需要跨機器/跨重啟持久化)。
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000;
+let failedAttempts = 0;
+let lockedUntil = 0;
 
 const docker = new Docker({ socketPath: "/var/run/docker.sock" });
 
@@ -41,11 +51,25 @@ function timingSafeEqual(a, b) {
 }
 
 function requireAuth(req, res, next) {
+  const now = Date.now();
+  if (now < lockedUntil) {
+    const retryAfterS = Math.ceil((lockedUntil - now) / 1000);
+    res.set("Retry-After", String(retryAfterS));
+    return res.status(429).json({ error: "too many failed attempts, locked out", retry_after_s: retryAfterS });
+  }
+
   const header = req.get("authorization") || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (!token || !timingSafeEqual(token, AUTH_TOKEN)) {
+  const pin = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!pin || !timingSafeEqual(pin, AUTH_PIN)) {
+    failedAttempts += 1;
+    if (failedAttempts >= MAX_ATTEMPTS) {
+      lockedUntil = now + LOCKOUT_MS;
+      failedAttempts = 0;
+    }
     return res.status(401).json({ error: "unauthorized" });
   }
+
+  failedAttempts = 0;
   next();
 }
 

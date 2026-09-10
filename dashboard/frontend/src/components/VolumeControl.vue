@@ -70,7 +70,7 @@ onMounted(() => {
       <input type="range" min="0" max="100" :value="volume" :disabled="!hasToken" @input="onSlide" />
       <span class="vol-value">{{ volume }}%</span>
     </div>
-    <div v-if="!hasToken" class="note">需要在左側「解鎖容器/音量控制」輸入 token 才能調整(這會改動系統預設音訊輸出音量,影響本機所有播放音量)。</div>
+    <div v-if="!hasToken" class="note">需要在上面輸入 PIN 解鎖才能調整(這會改動系統預設音訊輸出音量,影響本機所有播放音量)。</div>
     <div v-if="errorMsg" class="note" style="color:var(--fail);">{{ errorMsg }}</div>
   </div>
 </template>

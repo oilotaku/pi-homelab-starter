@@ -3,6 +3,7 @@ import { getConfig } from "../api.js";
 import HealthStrip from "../components/HealthStrip.vue";
 import LiveStats from "../components/LiveStats.vue";
 import VolumeControl from "../components/VolumeControl.vue";
+import TokenUnlock from "../components/TokenUnlock.vue";
 
 const cfg = getConfig();
 const host = window.location.hostname || cfg.fallbackHost || "localhost";
@@ -22,6 +23,7 @@ function serviceHref(svc) {
     <HealthStrip />
   </div>
 
+  <TokenUnlock />
   <LiveStats />
   <VolumeControl />
 
