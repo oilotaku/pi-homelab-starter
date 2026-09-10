@@ -31,11 +31,30 @@ if (!AUTH_PIN) {
 }
 
 // ---- 失敗鎖定:PIN 只有幾位數字,keyspace 小,一定要擋暴力猜測 ----
-// 單一 process 記憶體狀態即可(這是單人家用工具,不需要跨機器/跨重啟持久化)。
+// 依來源 IP 分別計數/鎖定,不是全域鎖定——全域鎖定的話,任何人(或單純誤觸)
+// 送 5 次錯的 PIN 就能把真正的使用者也一起擋在外面,等於免費的 DoS,這點是
+// 安全掃描抓出來的,原本的實作沒考慮到。連續鎖定會指數增加時間(5 分鐘倍增,
+// 上限 1 小時),提高長期暴力猜測的成本。單一 process 記憶體狀態即可(這是
+// 單人家用工具,不需要跨機器/跨重啟持久化),定期清掉太久沒動靜的紀錄避免
+// Map 無限增長。
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 5 * 60 * 1000;
-let failedAttempts = 0;
-let lockedUntil = 0;
+const BASE_LOCKOUT_MS = 5 * 60 * 1000;
+const MAX_LOCKOUT_MS = 60 * 60 * 1000;
+const STALE_ENTRY_MS = 24 * 60 * 60 * 1000;
+const attemptsByIp = new Map(); // ip -> { count, lockedUntil, lockoutStreak, lastSeen }
+
+function getClientIp(req) {
+  return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function pruneStaleAttempts(now) {
+  for (const [ip, entry] of attemptsByIp) {
+    if (now - entry.lastSeen > STALE_ENTRY_MS && now >= entry.lockedUntil) {
+      attemptsByIp.delete(ip);
+    }
+  }
+}
+setInterval(() => pruneStaleAttempts(Date.now()), 60 * 60 * 1000).unref();
 
 const docker = new Docker({ socketPath: "/var/run/docker.sock" });
 
@@ -52,24 +71,32 @@ function timingSafeEqual(a, b) {
 
 function requireAuth(req, res, next) {
   const now = Date.now();
-  if (now < lockedUntil) {
-    const retryAfterS = Math.ceil((lockedUntil - now) / 1000);
+  const ip = getClientIp(req);
+  const entry = attemptsByIp.get(ip);
+
+  if (entry && now < entry.lockedUntil) {
+    const retryAfterS = Math.ceil((entry.lockedUntil - now) / 1000);
     res.set("Retry-After", String(retryAfterS));
-    return res.status(429).json({ error: "too many failed attempts, locked out", retry_after_s: retryAfterS });
+    return res.status(429).json({ error: "too many failed attempts from this address, locked out", retry_after_s: retryAfterS });
   }
 
   const header = req.get("authorization") || "";
   const pin = header.startsWith("Bearer ") ? header.slice(7) : "";
   if (!pin || !timingSafeEqual(pin, AUTH_PIN)) {
-    failedAttempts += 1;
-    if (failedAttempts >= MAX_ATTEMPTS) {
-      lockedUntil = now + LOCKOUT_MS;
-      failedAttempts = 0;
+    const e = entry || { count: 0, lockedUntil: 0, lockoutStreak: 0, lastSeen: now };
+    e.count += 1;
+    e.lastSeen = now;
+    if (e.count >= MAX_ATTEMPTS) {
+      e.lockoutStreak += 1;
+      const lockoutMs = Math.min(BASE_LOCKOUT_MS * 2 ** (e.lockoutStreak - 1), MAX_LOCKOUT_MS);
+      e.lockedUntil = now + lockoutMs;
+      e.count = 0;
     }
+    attemptsByIp.set(ip, e);
     return res.status(401).json({ error: "unauthorized" });
   }
 
-  failedAttempts = 0;
+  attemptsByIp.delete(ip);
   next();
 }
 
