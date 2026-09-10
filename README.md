@@ -52,36 +52,74 @@ $EDITOR .env     # 至少改掉 PIHOLE_WEBPASSWORD、SMB_SHARE_PATH、SMB_USER
 
 ## dashboard (監控管理頁面)
 
-`dashboard/` 是家用伺服器的**監控管理頁面**——服務入口、主機與裝置健康狀態,一站集中在這裡,不用個別登入各服務才能看狀態。純靜態檔案,由 `nginx:alpine` 唯讀掛載,沒有後端,源自一台實際在跑的 Raspberry Pi 5。
+`dashboard/` 是家用伺服器的**監控管理頁面**——服務入口、主機與裝置健康狀態、即時資源、容器與音量控制,一站集中在這裡,不用個別登入各服務才能看狀態。源自一台實際在跑的 Raspberry Pi 5。
 
-### 設定
+架構分兩塊:
 
-機器相關的東西都集中在 `dashboard/html/config.js` 一個檔案裡,換一台機器用只要改這裡,不用動 `index.html`/`index.js`。跟 `.env` 同樣的模式:
+- **`dashboard/frontend/`**:Vue 3 + Vite 寫的 SPA(hash 路由,三個頁面),`npm run build` 產出純靜態檔,由 `nginx:alpine` serve,唯讀資訊(服務入口、健康狀態、裝置清單)不需要後端也能動。
+- **`backend/`**:選用的小型 Node.js 後端,提供即時 CPU/RAM、Docker 容器啟停/重啟、系統音量控制這幾個「需要在 host 上實際執行指令」的功能。刻意做成**原生 systemd service**,不是 Docker 容器——容器管理要碰 host 的 Docker socket、音量控制要碰桌面 session 的 PipeWire,兩者放進容器裡都不乾淨,直接跑在 host 上最簡單。沒有部署這個後端也完全沒問題,前端會自動隱藏相關區塊,退回純唯讀模式。
+
+### 設定:前端
+
+機器相關的東西都集中在 `dashboard/config.example.js` 一個檔案裡,換一台機器用只要改這裡,不用動 Vue 原始碼。跟 `.env` 同樣的模式:
 
 ```bash
-cp dashboard/html/config.example.js dashboard/html/config.js
+cp dashboard/config.example.js dashboard/html/config.js
 $EDITOR dashboard/html/config.js
 ```
 
-`config.js` 已被 `.gitignore` 排除,不會進版控;`config.example.js` 只示範這個 repo 實際會幫你裝的 Pi-hole 一張卡片,其餘(服務連結清單、有沒有自架 RSS 自動下載後端)都是這個 repo 以外的東西,不在範本裡預設,依你自己機器的實際情況加。
+`dashboard/html/` 整個目錄都被 `.gitignore` 排除(build 產物 + cron 產生的 JSON + 這份機器專屬 config),不會進版控;`config.example.js` 只示範這個 repo 實際會幫你裝的 Pi-hole 一張卡片,其餘(服務連結清單、有沒有部署下面的後端)依你自己機器的實際情況加。
+
+Build 並部署到 `dashboard/html/`(給 nginx serve):
+
+```bash
+./scripts/deploy_dashboard.sh
+```
+
+這支腳本會先確認 `dashboard/html/config.js` 存在,再跑 `npm run build`,最後把產物同步進 `dashboard/html/`(保留既有的 `config.js` 跟 cron 產生的 `*.json`,不會被覆蓋)。
+
+### 設定:後端(容器控制、音量控制、即時資源,選用)
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+# 產生一個 token,填進 .env 的 AUTH_TOKEN(容器啟停/重啟、音量調整都要驗證這個)
+openssl rand -hex 24
+$EDITOR .env
+```
+
+用 systemd **user service** 常駐(參考 `pi-dashboard-backend.service.example`,做法跟這台機器上其他常駐的桌面相關服務一致):
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp backend/pi-dashboard-backend.service.example ~/.config/systemd/user/pi-dashboard-backend.service
+$EDITOR ~/.config/systemd/user/pi-dashboard-backend.service   # 確認 WorkingDirectory 是實際路徑
+systemctl --user daemon-reload
+systemctl --user enable --now pi-dashboard-backend.service
+```
+
+再把 `dashboard/html/config.js` 的 `backendPort` 設成 `.env` 裡的 `PORT`(預設 `8091`),前端就會自動顯示即時資源、容器控制、音量控制區塊。**容器啟停/重啟、音量調整這幾個 mutating 動作都需要 token**(唯讀的即時數據、容器列表不用);網頁上點側邊欄「解鎖容器/音量控制」輸入一次 token,存在瀏覽器 localStorage。
 
 ### 頁面
 
-三個頁面共用一套 design tokens(`common.css`),支援亮/暗色主題,側邊導覽在窄螢幕自動收成頂部列,並顧了觸控熱區、輸入框 iOS 自動放大等手機瀏覽細節。
+三個頁面共用一套 design tokens,支援亮/暗色主題,側邊導覽在窄螢幕自動收成頂部列,並顧了觸控熱區、輸入框 iOS 自動放大等手機瀏覽細節。
 
-- **首頁**(`index.html`):服務連結卡片、新增追番的 RSS 表單、健康摘要條(點進去看裝置健康頁)
-- **裝置健康**(`health.html`):主機資源(CPU/記憶體/磁碟)、磁碟 SMART 健康、Docker 容器狀態、區網裝置在線摘要
-- **區網裝置**(`devices.html`,樣式在 `devices.css`):DNS 查詢紀錄被動辨識出的區網裝置清單——這頁跟下面提到的三個 JSON 一樣是排程腳本產生的,`devices.html` 本身**不在這個 repo 裡**,只有它引用的 `devices.css` 有進版控
+- **首頁**:服務連結卡片、健康摘要條(點進去看裝置健康頁)、即時 CPU/RAM/Swap(需要後端)、系統音量控制(需要後端)
+- **裝置健康**:主機資源(CPU/記憶體/磁碟)、磁碟 SMART 健康、Docker 容器狀態與控制按鈕(有後端時可啟停/重啟,沒有就是唯讀列表)、區網裝置在線摘要
+- **區網裝置**:DNS 查詢紀錄被動辨識出的區網裝置清單
 
 ### 資料從哪來
 
-頁面本身是純靜態檔,所有數值都是前端 JS 對同目錄下幾個 JSON 檔案 `fetch()` 輪詢,由 `scripts/` 底下的 Python 腳本定期產生——這些腳本**在這個 repo 裡**,換一台機器用不用重寫,設幾個環境變數就好:
+唯讀資訊是前端對同目錄下幾個 JSON 檔案 `fetch()` 輪詢,由 `scripts/` 底下的 Python 腳本定期產生——這些腳本**在這個 repo 裡**,換一台機器用不用重寫,設幾個環境變數就好:
 
 | 檔案 | 內容 | 產生腳本 | 建議排程 |
 |---|---|---|---|
 | `pi_status.json` | CPU 溫度/負載、記憶體、磁碟、開機時間 | `scripts/generate_pi_status.py`(不需 sudo) | 每分鐘 |
 | `health.json` | 磁碟 SMART 健康、Docker 容器狀態 | `scripts/generate_health.py`(SMART 讀取需要 sudo) | 每 5 分鐘 |
-| `devices.json` / `devices.html` | 區網裝置清單與在線狀態 | `scripts/generate_devices_page.py`(讀 Pi-hole DB 需要 sudo) | 每 10 分鐘 |
+| `devices.json` | 區網裝置清單與在線狀態 | `scripts/generate_devices_page.py`(讀 Pi-hole DB 需要 sudo) | 每 10 分鐘 |
+
+即時資訊(CPU/RAM、容器狀態、音量)則是前端直接打上面的 `backend/` API,不經過 cron。
 
 每支腳本開頭的 docstring 都寫了完整的環境變數清單與 crontab 範例。三支預設都不需要設定就能跑(`DASHBOARD_HTML_DIR` 預設抓 repo 裡的 `dashboard/html`,`PIHOLE_DB` 預設官方安裝路徑,`THIS_HOST_IP` 找不到會自動偵測),需要調整的通常只有:
 
@@ -96,4 +134,5 @@ $EDITOR dashboard/html/config.js
 
 ### 限制
 
-- 沒有任何身分驗證——整個設計假設只有信任的家用網路(LAN + VPN)能連到這個頁面,不要對外公網開放
+- 前端唯讀部分沒有任何身分驗證——整個設計假設只有信任的家用網路(LAN + VPN)能連到這個頁面,不要對外公網開放
+- 後端的 mutating API(容器啟停/重啟、音量調整)用固定 token 驗證,**沒有帳號區分、沒有操作紀錄**,同一個 token 對所有能連到這個 port 的人都是同一組權限——一樣只適合信任的家用網路,不要對外公網開放。這個後端能碰 Docker socket(等同 host root 權限),`.env` 裡的 `AUTH_TOKEN` 外洩風險遠高於單純的網頁密碼,務必留在 `.gitignore` 範圍內,不要手動加進版控

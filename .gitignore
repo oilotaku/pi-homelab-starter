@@ -1,9 +1,12 @@
 # 使用者自己的設定值,含密碼/authkey,絕對不要進版控
 .env
 
-# dashboard 機器相關設定(連線位址、服務清單、RSS 後端 port),
-# 只留 config.example.js 這個通用範本進版控
-dashboard/html/config.js
+# dashboard/html 整個目錄都是產物,不是原始碼:
+#   - Vue 前端(dashboard/frontend/)build 出來的靜態檔
+#   - cron 腳本(scripts/generate_*.py)定期產生的 JSON
+#   - 使用者從 dashboard/config.example.js 複製出來的機器專屬 config.js
+# 原始碼在 dashboard/frontend/、dashboard/config.example.js,兩者都進版控。
+dashboard/html/
 
 # Pi-hole Docker 執行期資料
 pihole/etc-pihole/
@@ -21,11 +24,7 @@ qbittorrent/
 rss-manager/
 /docker-compose.yml
 
-# 由 cron 腳本自動產生的靜態檔/log,不是原始碼
-dashboard/html/pi_status.json
-dashboard/html/devices.html
-dashboard/html/devices.json
-dashboard/html/health.json
+# cron 腳本 log
 scripts/*.log
 
 # Python
@@ -33,3 +32,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+
+# Node(前端 build 產物、後端執行期依賴)
+node_modules/
+dashboard/frontend/dist/

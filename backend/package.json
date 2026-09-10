@@ -1,0 +1,17 @@
+{
+  "name": "pi-dashboard-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jason-Pi dashboard 的原生後端:即時 CPU/RAM、Docker 容器控制、系統音量控制",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dockerode": "^5.0.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
