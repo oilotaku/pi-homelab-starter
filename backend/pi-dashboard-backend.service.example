@@ -1,0 +1,30 @@
+# 範本。實際部署複製到 ~/.config/systemd/user/pi-dashboard-backend.service,
+# 把 %h 換成你的實際 home 路徑後(systemd user unit 的 WorkingDirectory 不吃 %h 以外的展開,
+# 用絕對路徑最保險),依需要調整。
+#
+# 用 user service 而非 system service:音量控制要接桌面 session 的 PipeWire,
+# 需要 XDG_RUNTIME_DIR / DBUS_SESSION_BUS_ADDRESS 這組使用者 session 環境,
+# 跟這台機器上 uxplay.service 的作法一致。
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp pi-dashboard-backend.service.example ~/.config/systemd/user/pi-dashboard-backend.service
+#   # 編輯 WorkingDirectory 為實際路徑
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now pi-dashboard-backend.service
+
+[Unit]
+Description=Jason-Pi dashboard backend (container control + volume control)
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/docker-stack/backend
+Environment=XDG_RUNTIME_DIR=%t
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
