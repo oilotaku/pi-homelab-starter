@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { getConfig, getPiStatus, getHealth, getDevices } from "../api.js";
 import ContainersPanel from "../components/ContainersPanel.vue";
+import TokenUnlock from "../components/TokenUnlock.vue";
 
 const cfg = getConfig();
 
@@ -136,6 +137,7 @@ onUnmounted(() => {
   </div>
 
   <!-- 有部署 pi-dashboard-backend 時用即時、可操作的版本;沒有就退回唯讀列表 -->
+  <TokenUnlock />
   <ContainersPanel v-if="cfg.backendPort" />
   <div v-else class="group">
     <h2>Docker 容器</h2>

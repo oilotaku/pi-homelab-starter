@@ -88,26 +88,6 @@ button { font-family: inherit; }
   color: var(--muted);
   padding: 0 12px;
 }
-.unlock {
-  margin-top: 8px;
-  padding: 0 4px;
-}
-.unlock button {
-  width: 100%;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.unlock button:hover { background: var(--accent-soft); color: var(--accent); }
-.unlock button.unlocked { color: var(--ok); }
 
 .main {
   flex: 1;
@@ -151,7 +131,7 @@ button { font-family: inherit; }
     font-size: 0.82rem;
     white-space: nowrap;
   }
-  .navfoot, .unlock { display: none; }
+  .navfoot { display: none; }
   .main { padding: 18px 16px 48px; }
   .page-header h1 { font-size: 1.3rem; }
 }
@@ -211,6 +191,38 @@ button { font-family: inherit; }
   font-size: 0.72rem;
   color: var(--muted);
   margin-top: 8px;
+}
+
+/* ---- token unlock card ---- */
+.token-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  flex-wrap: wrap;
+}
+.token-status { flex: 1 1 auto; font-size: 0.85rem; }
+.token-card button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.token-card button:hover { border-color: var(--accent); color: var(--accent); }
+.pin-input {
+  flex: 1 1 100px;
+  max-width: 140px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  text-align: center;
 }
 
 /* ---- health strip (home) ---- */

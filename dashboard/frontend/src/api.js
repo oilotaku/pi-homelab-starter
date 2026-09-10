@@ -43,12 +43,17 @@ async function backendFetch(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
   if (opts.auth) {
     const token = getToken();
-    if (!token) throw new Error("需要先輸入 token");
+    if (!token) throw new Error("需要先輸入 PIN");
     headers.Authorization = `Bearer ${token}`;
   }
   const res = await fetch(base + path, { ...opts, headers });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) {
+    if (res.status === 429 && data.retry_after_s) {
+      throw new Error(`PIN 連續錯誤太多次,鎖定中,請 ${data.retry_after_s} 秒後再試`);
+    }
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
   return data;
 }
 

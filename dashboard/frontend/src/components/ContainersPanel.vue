@@ -67,7 +67,7 @@ onUnmounted(() => clearInterval(timer));
         </div>
       </div>
     </div>
-    <div v-if="!hasToken" class="note">需要在左側「解鎖容器/音量控制」輸入 token 才能操作按鈕(唯讀列表不需要)。</div>
+    <div v-if="!hasToken" class="note">需要在上面輸入 PIN 解鎖才能操作按鈕(唯讀列表不需要)。</div>
     <div v-if="errorMsg" class="note" style="color:var(--fail);">{{ errorMsg }}</div>
   </div>
 </template>
