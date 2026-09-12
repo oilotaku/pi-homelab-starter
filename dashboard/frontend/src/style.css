@@ -120,20 +120,42 @@ button { font-family: inherit; }
     align-items: center;
     flex-wrap: nowrap;
     gap: 2px;
-    padding: 10px max(10px, env(safe-area-inset-right)) 10px max(10px, env(safe-area-inset-left));
+    /* 垂直 padding 壓到最小:navlink 本身已有 44px 觸控高度(見 pointer: coarse),
+       不需要再靠外層 padding 撐高,否則 sticky 導覽列在手機上會佔掉太多畫面。 */
+    padding: 4px max(10px, env(safe-area-inset-right)) 4px max(10px, env(safe-area-inset-left));
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
   .brand { display: none; }
   .navlink {
     flex: 1 1 0;
     justify-content: center;
-    padding: 10px 4px;
+    padding: 6px 4px;
     font-size: 0.82rem;
     white-space: nowrap;
   }
   .navfoot { display: none; }
-  .main { padding: 18px 16px 48px; }
+  .main { padding: 14px 16px 48px; }
+  .page-header { margin-bottom: 14px; }
   .page-header h1 { font-size: 1.3rem; }
+  .group { margin-bottom: 20px; }
+
+  /* 健康摘要條:桌面版是一整排 flex,手機上四個項目會折成 2~3 列、
+     再加上「查看詳情」獨佔一列,整條高度接近 200px。改成 2x2 緊湊格線。 */
+  .health-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    padding: 10px 14px;
+  }
+  .hs-item { min-width: 0; gap: 2px; }
+  .hs-value { font-size: 0.95rem; }
+  .hs-more {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    text-align: right;
+    font-size: 0.76rem;
+    line-height: 1;
+  }
 }
 
 @media (pointer: coarse) {
