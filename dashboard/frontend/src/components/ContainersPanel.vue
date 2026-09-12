@@ -39,6 +39,12 @@ async function act(name, action) {
 
 const STATE_LABEL = { running: "運作中", exited: "已停止", restarting: "重啟中", paused: "已暫停" };
 
+// 後端回傳 controllable=false 代表不在 ALLOWED_CONTAINERS 白名單,只列出、不給操作。
+// 舊版後端沒有這個欄位(undefined)視為可操作,向下相容。
+function canAct(c) {
+  return hasToken.value && c.controllable !== false && !pending.value[c.name];
+}
+
 let timer;
 onMounted(() => {
   if (!cfg.backendPort) return;
@@ -60,10 +66,13 @@ onUnmounted(() => clearInterval(timer));
         <span class="badge" :class="c.state === 'running' ? 'ok' : 'fail'">
           {{ STATE_LABEL[c.state] || c.state }}
         </span>
-        <div class="docker-actions">
-          <button :disabled="!hasToken || !!pending[c.name]" @click="act(c.name, 'start')" title="啟動">▶ 啟動</button>
-          <button :disabled="!hasToken || !!pending[c.name]" @click="act(c.name, 'restart')" title="重啟">⟳ 重啟</button>
-          <button :disabled="!hasToken || !!pending[c.name]" @click="act(c.name, 'stop')" title="停止">■ 停止</button>
+        <div v-if="c.controllable === false" class="docker-actions">
+          <span class="status-text" title="不在後端 ALLOWED_CONTAINERS 白名單,僅顯示狀態">僅顯示</span>
+        </div>
+        <div v-else class="docker-actions">
+          <button :disabled="!canAct(c)" @click="act(c.name, 'start')" title="啟動">▶ 啟動</button>
+          <button :disabled="!canAct(c)" @click="act(c.name, 'restart')" title="重啟">⟳ 重啟</button>
+          <button :disabled="!canAct(c)" @click="act(c.name, 'stop')" title="停止">■ 停止</button>
         </div>
       </div>
     </div>

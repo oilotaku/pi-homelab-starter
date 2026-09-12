@@ -158,6 +158,14 @@ app.get("/api/stats", (req, res) => {
 
 // ---- /api/containers: 唯讀列表不需要 token,啟停/重啟需要 ----
 
+function isControllable(name) {
+  return !ALLOWED_CONTAINERS.length || ALLOWED_CONTAINERS.includes(name);
+}
+
+// 列表回傳「主機上所有容器」,跟 cron 產生的 health.json(docker ps -a)一致,
+// 首頁摘要條與這裡的面板數字才對得上。ALLOWED_CONTAINERS 只限制能不能啟停/重啟,
+// 不從列表裡藏掉——之前藏掉會讓不在白名單但已退出的容器在面板上憑空消失,
+// 摘要條卻算成「1 個異常」,兩邊數量對不上。
 async function listContainers() {
   const containers = await docker.listContainers({ all: true });
   return containers
@@ -167,8 +175,8 @@ async function listContainers() {
       image: c.Image,
       state: c.State, // running / exited / ...
       status: c.Status,
+      controllable: isControllable((c.Names[0] || "").replace(/^\//, "")),
     }))
-    .filter((c) => !ALLOWED_CONTAINERS.length || ALLOWED_CONTAINERS.includes(c.name))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -187,7 +195,7 @@ app.post("/api/containers/:name/:action", requireAuth, async (req, res) => {
   if (!CONTAINER_ACTIONS.has(action)) {
     return res.status(400).json({ error: "unknown action" });
   }
-  if (ALLOWED_CONTAINERS.length && !ALLOWED_CONTAINERS.includes(name)) {
+  if (!isControllable(name)) {
     return res.status(403).json({ error: "container not in allowlist" });
   }
   try {
